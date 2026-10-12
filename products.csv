@@ -5,4 +5,4 @@ s2_l2a,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2
 s1_rtc,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s1_rtc.odc-product.yaml
 s2_geomad_annual,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2_geomad_annual.odc-product.yaml
 s2_geomad_annual_120,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2_geomad_annual_120.odc-product.yaml
-flood_hazard_rp02;flood_hazard_rp05;flood_hazard_rp10;flood_hazard_rp25;flood_hazard_rp50,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/flood_hazard.odc-product.yaml
+flood_hazard,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/flood_hazard.odc-product.yaml

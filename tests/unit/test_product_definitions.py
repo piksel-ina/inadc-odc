@@ -89,3 +89,41 @@ def test_all_product_yamls_are_valid():
             for m in product_def['measurements']:
                 assert 'name' in m, f"Measurement missing 'name' in {yf}"
                 assert 'dtype' in m, f"Measurement missing 'dtype' in {yf}"
+
+
+def test_flood_hazard_product_definition():
+    product_def, _ = _load_product('flood_hazard.odc-product.yaml')
+    _assert_required_keys(product_def)
+
+    assert product_def['name'] == 'flood_hazard'
+    assert product_def['metadata_type'] == 'eo3'
+    assert product_def['storage']['crs'] == 'EPSG:6933'
+    assert product_def['storage']['resolution'] == {'x': 30, 'y': -30}
+
+    return_periods = ['rp02', 'rp05', 'rp10', 'rp25', 'rp50']
+    expected = [
+        f'{variable}_{rp}'
+        for rp in return_periods
+        for variable in ('flood_depth', 'flood_hazard_index', 'flood_hazard_class')
+    ]
+    measurements = {m['name']: m for m in product_def['measurements']}
+    assert list(measurements) == expected
+
+    for name, m in measurements.items():
+        if name.startswith('flood_hazard_class'):
+            assert m['dtype'] == 'uint8'
+            assert m['nodata'] == 255
+            assert m['flags_definition']['hazard']['values'] == {1: 'low', 2: 'moderate', 3: 'high'}
+        else:
+            assert m['dtype'] == 'float32'
+            assert str(m['nodata']).lower() == 'nan'
+
+
+def test_products_csv_has_single_flood_hazard_product():
+    with open('products.csv', 'r') as f:
+        rows = [line.strip().split(',', 1) for line in f if line.strip()]
+    flood_rows = [row for row in rows if row[0].startswith('flood_hazard')]
+    assert flood_rows == [[
+        'flood_hazard',
+        'https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/flood_hazard.odc-product.yaml',
+    ]]

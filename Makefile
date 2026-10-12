@@ -9,7 +9,6 @@ COMPOSE_FILE_TEST := docker/docker-compose-test.yml
 PROJECT_NAME := piksel
 ENVIRONMENT ?= default
 EPSG ?= 4326
-FLOOD_HAZARD_RPS ?= rp02 rp05 rp10 rp25 rp50
 
 # Common Docker Compose command with environment variables
 DOCKER_COMPOSE = docker compose --env-file .env -f $(COMPOSE_FILE) -p $(PROJECT_NAME)
@@ -409,17 +408,14 @@ index-s2-geomad-annual-lowres: ## Index Sentinel-2 Annual Geomedian - Low Resolu
 	           's3://piksel-staging-public-data/s2_geomad_annual_120/1.0.0/**/*.stac-item.json' \
 	           's2_geomad_annual_120'"
 
-index-flood-hazard: ## Index Flood Hazard (Bahaya Banjir 2025) return-period products from S3
+index-flood-hazard: ## Index Flood Hazard (Bahaya Banjir 2025) from S3
 	@echo "$(BLUE)Indexing Flood Hazard (Bahaya Banjir 2025)...$(NC)"
-	@for rp in $(FLOOD_HAZARD_RPS); do \
-	  echo "$(BLUE)  flood_hazard_$$rp$(NC)"; \
-	  $(DOCKER_COMPOSE) exec -T odc \
-	    bash -c "AWS_DEFAULT_REGION=ap-southeast-3 s3-to-dc --stac \
-	             --no-sign-request \
-	             --rename-product='flood_hazard_$$rp' \
-	             's3://piksel-staging-public-data/flood_hazard_$$rp/1.0.0/**/*.stac-item.json' \
-	             'flood_hazard_$$rp'" || exit 1; \
-	done
+	$(DOCKER_COMPOSE) exec odc \
+	  bash -c "AWS_DEFAULT_REGION=ap-southeast-3 s3-to-dc --stac \
+	           --no-sign-request \
+	           --rename-product='flood_hazard' \
+	           's3://piksel-staging-public-data/flood_hazard/1.0.0/**/*.stac-item.json' \
+	           'flood_hazard'"
 # =========================
 # Utility commands
 # =========================
