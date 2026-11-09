@@ -1,179 +1,101 @@
-# Piksel-core
+# inadc-odc
 
-Enable users to run the piksel services on their local machines, providing a self-contained environment for managing and analysing satellite data using Open Data Cube (ODC) for Indonesia region
+A self-contained Open Data Cube (ODC) environment for the Indonesia Data Cube (INADC). It runs PostGIS + ODC locally via Docker Compose so you can add product definitions, index satellite data, and validate the data cube catalogue before it is consumed by the EKS pipelines.
+
+This repository is also the source of truth for the ODC **product definitions** (`products/`, `products.csv`) and **custom metadata types** (`metadata/`) that the Kubernetes/Argo workflows in the cluster pull from.
 
 ## Services
 
-Piksel-core consists of multiple services that work together to provide a complete satellite data management and analysis platform:
-
-| Service                  | Description                                                                                | Documentation                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| **PostgreSQL**           | Database backend with PostGIS extension for storing ODC metadata and spatial indices       | [PostgreSQL Docs](https://www.postgresql.org/docs/)                |
-| **ODC (Open Data Cube)** | Core indexing and data management service for satellite imagery                            | [ODC Docs](https://datacube-core.readthedocs.io/)                  |
-| **Jupyter Notebook**     | Interactive Python environment for data analysis, visualisation, and algorithm development | [Jupyter Docs](https://jupyter-notebook.readthedocs.io/)           |
-| **Datacube Explorer**    | Web-based interface for browsing, searching, and visualizing indexed satellite datasets    | [Explorer Docs](https://github.com/opendatacube/datacube-explorer) |
+| Service | Description | Documentation |
+| --- | --- | --- |
+| **PostgreSQL + PostGIS** | Database backend storing ODC metadata and spatial indices | [PostgreSQL Docs](https://www.postgresql.org/docs/) |
+| **ODC (Open Data Cube)** | Indexing and data management for satellite imagery | [ODC Docs](https://datacube-core.readthedocs.io/) |
 
 ## Prerequisites
 
-- **Docker:** For installation documentation, please refer to [Docker's official documentation](https://docs.docker.com/get-docker/).
-- **Make:** Required for using the Makefile automation
+- **Docker** — see [Docker's installation docs](https://docs.docker.com/get-docker/)
+- **Make** — for the Makefile automation
 
 ## Quick Start
 
-Follow these steps to get your ODC environment up and running:
+1. **Clone the repository:**
 
-1.  **Clone the Repository:**
+   ```bash
+   git clone https://github.com/piksel-ina/inadc-odc.git
+   cd inadc-odc/
+   ```
 
-    ```bash
-    git clone https://github.com/piksel-ina/piksel-core.git
-    cd piksel-core/
-    ```
+2. **Set up the environment:**
 
-2.  **Setup Environment:**
+   ```bash
+   make setup
+   ```
 
-    ```bash
-    make setup
-    ```
+   Creates `.env` from `.env.example` and generates the ODC configuration (`datacube.conf`). Both are starter templates — use as-is or customise before continuing.
 
-    This creates a .env file from .env.example and generates the ODC configuration (datacube.conf).
+3. **Build the ODC image:**
 
-    > The generated .env and datacube.conf are starter template. Use them as-is or customise them for your environment before continuing..
+   ```bash
+   make build
+   ```
 
-3.  **Build the Docker Image/s:**
+4. **Start the services (PostGIS + ODC):**
 
-    ```bash
-    # Just ODC
-    make build-odc
+   ```bash
+   make up
+   ```
 
-    # ODC + Jupyter (if needed)
-    make build-all-dev
-    ```
+5. **Initialise the database:**
 
-    This command builds the Docker images for your ODC (and optionally Jupyter) environment. 
+   ```bash
+   make init-db
+   ```
 
-4.  **Start the Services:**
+6. **Add product definitions:**
 
-    ```bash
-    # Start Core services only (PostgreSQL + ODC)
-    make up
+   ```bash
+   make all-products
+   ```
 
-    # Start Core + Jupyter Notebook (if needed)
-    make up-jupyter 
-    ```
+   Adds every product definition in `products/` to the ODC index.
 
-5.  **Initialise the Database:**
+7. **Index data (example):**
 
-    ```bash
-    make init-db
-    ```
+   ```bash
+   make index-s2l2a
+   ```
 
-    This initialises the ODC database schema.
+   Indexes Sentinel-2 L2A with default parameters. Override them with variables:
 
-6.  **Add Product Definitions:**
+   ```bash
+   make index-s2l2a Bbox='115,-10,117,-8' Date='2021-01-01/2021-01-31'
+   ```
 
-    ```bash
-    make all-products
-    ```
+8. **Stop the environment:**
 
-    This adds all product definitions from the `products/` directory to the ODC.
+   ```bash
+   make down
+   ```
 
-7.  **Index Data (Example):**
+Run `make help` for the full list of commands.
 
-    ```bash
-    make index-sentinel2
-    ```
+## Products
 
-    This indexes Sentinel-2 L2A data with default parameters. You can customise the parameters by passing variables:
+Product definitions live in `products/*.yaml` and are catalogued in `products.csv`. Current products include Sentinel-2 L2A, Landsat Collection 2 surface reflectance and surface temperature, Sentinel-1 RTC, Sentinel-2 annual geomedian, and flood hazard. Custom metadata types are defined in `metadata/custom_metadata.odc-type.yaml`.
 
-    ```bash
-    make index-sentinel2 Bbox='115,-10,117,-8' Date='2021-01-01/2021-01-31'
-    ```
+`products.csv` and the metadata type are consumed by the cluster's ODC sync workflows via their raw GitHub URLs, so changes here propagate to the EKS environment.
 
-8. **More Commands:**
-
-    For a full list of available `make` commands and their descriptions, run:
-
-    ```bash
-    make help
-    ```
-
-9. **Stop the Environment:**
-
-    Stopping and removing containers:
-
-    ```bash
-    make down
-    ```
-
-    
-
-
-## For Developers
-
-
-1. **View Service Status and logs:**
-
-    ```bash
-    make ps
-    make logs
-    ```
-
-2. **Access Shells**:
-
-    ```bash
-    make bash-odc
-    make psql
-    make bash-jupyter
-    ```
-
-3. **Manage Products**
-
-    ```bash
-    make list-products                    # List all products
-    make all-products                     # Add all products from products/
-    make add-product F=product.yaml       # Add specific product
-    make rm-product P=product_name        # Remove specific product
-    ```
-
-
-
-## Service Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Piksel-Core Platform                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
-│  │  PostgreSQL  │◄─┤     ODC      │◄─┤   Jupyter Notebook   │   │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘   │
-│         ▲                  ▲                                    │
-│         │                  │                                    │
-│         │          ┌───────┴──────────────┐                     │
-│         └──────────┤  Datacube Explorer   │                     │
-│                    └──────────────────────┘                     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+          ┌──────────────┐        ┌──────────────┐
+          │  PostgreSQL  │◄───────┤     ODC      │
+          │   + PostGIS  │        │  (indexing)  │
+          └──────────────┘        └──────────────┘
 
-                    Data Flow:
-    STAC Catalogs → ODC (Indexing) → PostgreSQL
-                         ↓
-            Jupyter/Explorer (Analysis & Visualisation)
+   Data flow:  STAC / S3 sources → ODC (indexing) → PostGIS
 ```
 
-## Docker Build Workflows (GitHub Actions)
+## Docker Build (GitHub Actions)
 
-This repo contains GitHub Actions workflows to build and push Docker images to **AWS ECR**.
-
-1. **Tag build**
-
-    Runs automatically when push a Git tag:
-    - `odc-*`
-    - `jupyter-*`
-    - `dev-jupyter-*`
-
-2. **Manual build**
-    
-    - Run from GitHub UI (Actions → Manual Docker Build) and select a component.
-    
-    - It tags the image using a date-based version vYYYYMMDD (example: odc-v20260120).
+Pushing a Git tag matching `inadc-odc-vYYYYMMDD-HHMM` builds the ODC image and pushes it to the `inadc-odc` AWS ECR repository (see `.github/workflows/build-inadc-odc.yml`).
