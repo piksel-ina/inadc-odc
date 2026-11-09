@@ -33,24 +33,13 @@ help: ## Show this help
 # =========================
 # Docker image build commands
 # =========================
-.PHONY: build-odc build-jupyter build-jupyter-dev build-all
-build-odc: ## Build base services (Postgis + ODC)
+.PHONY: build build-odc
+build-odc: ## Build base services (PostGIS + ODC)
 	@echo "$(BLUE)Building odc docker image...$(NC)"
 	$(DOCKER_COMPOSE) build odc
 
-build-jupyter: ## Build Jupyter Docker image
-	@echo "$(BLUE)Building jupyter docker image...$(NC)"
-	$(DOCKER_COMPOSE) build jupyter
-
-build-jupyter-dev: ## Build Jupyter dev Docker image
-	@echo "$(BLUE)Building jupyter-dev docker image...$(NC)"
-	$(DOCKER_COMPOSE) build jupyter-dev
-
-build-all: build-odc build-jupyter ## Build all Docker images
-	@echo "$(GREEN)All Docker images built successfully!$(NC)"
-
-build-all-dev: build-odc build-jupyter-dev ## Build all dev Docker images
-	@echo "$(GREEN)All Docker images built successfully!$(NC)"
+build: build-odc ## Build the ODC Docker image
+	@echo "$(GREEN)Docker image built successfully!$(NC)"
 
 # =========================
 # Environment / configuration
@@ -77,39 +66,12 @@ check-config: ## Check datacube configuration (runs inside ODC container)
 # =========================
 # Service lifecycle
 # =========================
-.PHONY: up up-all up-jupyter up-jupyter-dev up-explorer stop down rmvol restart ps logs clean
-up: ## Start base services
-	@echo "$(BLUE)Starting Piksel Base services...$(NC)"
+.PHONY: up stop down rmvol restart ps logs clean
+up: ## Start services (PostGIS + ODC)
+	@echo "$(BLUE)Starting Piksel services...$(NC)"
 	@export $$(grep -v '^#' .env | xargs) && \
 	$(DOCKER_COMPOSE) up -d && \
-	echo "$(BLUE)ODC and PostgreSQL Services Started$(NC)" && \
-	echo "To Start With Jupyter Notebook: $(BLUE)make up-jupyter$(NC)" && \
-	echo "To Start With Datacube Explorer: $(BLUE)make up-explorer$(NC)"
-
-up-jupyter: ## Start services with Jupyter profile
-	@echo "$(BLUE)Starting Piksel Base services...$(NC)"
-	@export $$(grep -v '^#' .env | xargs) && \
-	COMPOSE_PROFILES=jupyter $(DOCKER_COMPOSE) up -d && \
-	echo "$(GREEN)Services started. Jupyter is available at http://localhost:$$JUPYTER_PORT$(NC)"
-
-up-jupyter-dev: ## Start services with Jupyter dev profile
-	@echo "$(BLUE)Starting With Jupyter Development Container...$(NC)"
-	@export $$(grep -v '^#' .env | xargs) && \
-	COMPOSE_PROFILES=jupyter-dev $(DOCKER_COMPOSE) up -d && \
-	echo "$(GREEN)Services started. Jupyter is available at http://localhost:$$JUPYTER_PORT$(NC)"
-
-up-explorer: setup ## Start services with Explorer profile
-	@echo "$(BLUE)Starting Piksel Base services...$(NC)"
-	@export $$(grep -v '^#' .env | xargs) && \
-	COMPOSE_PROFILES=explorer $(DOCKER_COMPOSE) up -d && \
-	echo "$(GREEN)Services started. Datacube Explorer is available at http://localhost:$$EXPLORER_PORT$(NC)"
-
-up-all: ## Start services with Jupyter + Explorer profiles
-	@echo "$(BLUE)Starting Piksel Base services...$(NC)"
-	@export $$(grep -v '^#' .env | xargs) && \
-	COMPOSE_PROFILES=jupyter,explorer $(DOCKER_COMPOSE) up -d && \
-	echo "$(GREEN)Services started. Jupyter is available at http://localhost:$$JUPYTER_PORT$(NC)" && \
-	echo "$(GREEN)Services started. Datacube Explorer is available at http://localhost:$$EXPLORER_PORT$(NC)"
+	echo "$(BLUE)ODC and PostgreSQL services started$(NC)"
 
 stop: ## Stop project containers (without removing)
 	@echo "$(BLUE)Stopping Piksel services...$(NC)"
@@ -117,11 +79,11 @@ stop: ## Stop project containers (without removing)
 
 down: ## Stop and remove containers (preserve volumes)
 	@echo "$(BLUE)Stopping and removing Piksel containers (preserving volumes)...$(NC)"
-	COMPOSE_PROFILES=jupyter,jupyter-dev,explorer $(DOCKER_COMPOSE) down
+	$(DOCKER_COMPOSE) down
 
 rmvol: ## Stop and remove containers + volumes (destructive)
 	@echo "$(BLUE)Stopping and removing Piksel containers and volumes...$(NC)"
-	COMPOSE_PROFILES=jupyter,jupyter-dev,explorer $(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE) down -v
 
 restart: ## Restart all services
 	@echo "$(BLUE)Restarting Piksel services...$(NC)"
@@ -144,14 +106,6 @@ clean: ## Prune unused Docker resources (prompts; affects whole Docker host)
 	else \
 		echo "Aborted clean."; \
 	fi
-
-# =========================
-# Explorer initialization
-# =========================
-.PHONY: cubedash-init
-cubedash-init: ## Initialize Datacube Explorer (Cubedash)
-	@echo "$(BLUE)Initializing Datacube Explorer...$(NC)"
-	$(DOCKER_COMPOSE) exec datacube-explorer cubedash-gen --init --all
 
 # =========================
 # Database / Datacube system
@@ -418,24 +372,10 @@ index-flood-hazard: ## Index Flood Hazard (Bahaya Banjir 2025) from S3
 # =========================
 # Utility commands
 # =========================
-.PHONY: bash-odc bash-jupyter jupyter-token
+.PHONY: bash-odc
 bash-odc: ## Open a shell in the ODC container
 	@echo "${BLUE}Opening shell in ODC container...${NC}"
 	$(DOCKER_COMPOSE) exec odc bash
-
-bash-jupyter: ## Open a shell in the Jupyter container
-	@echo "${BLUE}Opening shell in Jupyter container...${NC}"
-	$(DOCKER_COMPOSE) exec jupyter bash
-
-jupyter-token: ## Print Jupyter token URL (if token auth enabled)
-	@echo "${BLUE}Getting Jupyter token...${NC}"
-	@token=$$($(DOCKER_COMPOSE) exec -T jupyter jupyter server list | grep -oP "token=\K[^[:space:]]*" || echo "No token found"); \
-	if [ "$$token" != "No token found" ]; then \
-		echo "${GREEN}Jupyter URL: http://localhost:8888/?token=$$token${NC}"; \
-	else \
-		echo "${YELLOW}No token found. Authentication may be disabled.${NC}"; \
-		echo "${GREEN}Jupyter URL: http://localhost:8888/${NC}"; \
-	fi
 
 # =========================
 # Dependency management (uv)
