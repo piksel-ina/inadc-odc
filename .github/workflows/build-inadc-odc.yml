@@ -1,0 +1,94 @@
+name: Build inadc-odc Image
+run-name: "inadc-odc: ${{ github.ref_name }}"
+
+on:
+  push:
+    tags:
+      - "inadc-odc-*"
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REGISTRY: ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
+  IMAGE_NAME: inadc-odc
+  CACHE_NAME: inadc-odc-cache
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.parse.outputs.image_tag }}
+    steps:
+      - name: Validate tag format
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          if [[ ! "$TAG_NAME" =~ ^inadc-odc-v[0-9]{8}-[0-9]{4}$ ]]; then
+            echo "::error::Invalid tag format: $TAG_NAME"
+            echo "Expected: inadc-odc-vYYYYMMDD-HHMM (e.g. inadc-odc-v20260429-1755)"
+            exit 1
+          fi
+          echo "Tag format valid: $TAG_NAME"
+
+      - name: Parse image tag
+        id: parse
+        run: |
+          IMAGE_TAG="${GITHUB_REF#refs/tags/inadc-odc-}"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  build-push:
+    needs: validate-tag
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: gha-inadc-odc
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.title=inadc-odc
+            org.opencontainers.image.version=${{ needs.validate-tag.outputs.image_tag }}
+            org.opencontainers.image.vendor=Badan Informasi Geospasial
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./docker/odc/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate-tag.outputs.image_tag }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.CACHE_NAME }}
+          cache-to: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.CACHE_NAME }},mode=max
+          platforms: linux/amd64
+
+      - name: Build Summary
+        if: success()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## Docker Build Report
+          Successfully built and pushed to ECR.
+
+          ### ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate-tag.outputs.image_tag }}
+
+          **Cache**: \`${{ env.ECR_REGISTRY }}/${{ env.CACHE_NAME }}\`
+
+          EOF
