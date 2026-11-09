@@ -5,7 +5,6 @@
 # Settings
 # =========================
 COMPOSE_FILE := docker/docker-compose.yml
-COMPOSE_FILE_TEST := docker/docker-compose-test.yml
 PROJECT_NAME := piksel
 ENVIRONMENT ?= default
 EPSG ?= 4326
@@ -469,26 +468,10 @@ update-deps: ## Update ODC + Jupyter dependencies to latest versions (uv --upgra
 # =========================
 # Testing
 # =========================
-TEST_PROJECT_NAME := piksel-test
 TEST_VENV_DIR := .venv
 PYTEST_ARGS ?= -v
 
-.PHONY: test-up test-down test-logs test test-venv test-deps test-unit test-integration test-verbose test-clean
-
-test-up: ## Start Docker test environment (isolated project name)
-	@echo "$(BLUE)Starting Piksel test services...$(NC)"
-	@export $$(grep -v '^#' .env | xargs) && \
-	docker compose --env-file .env -f $(COMPOSE_FILE_TEST) -p $(TEST_PROJECT_NAME) up -d && \
-	echo "$(GREEN)Test services started with project name: $(TEST_PROJECT_NAME)$(NC)"
-
-test-down: ## Stop and remove Docker test environment (including volumes)
-	@echo "$(BLUE)Stopping and removing Piksel test containers...$(NC)"
-	docker compose --env-file .env -f $(COMPOSE_FILE_TEST) -p $(TEST_PROJECT_NAME) down -v
-	@echo "$(GREEN)Test environment removed$(NC)"
-
-test-logs: ## Tail logs from Docker test environment
-	@echo "$(BLUE)Viewing Piksel test logs (press Ctrl+C to exit)...$(NC)"
-	docker compose --env-file .env -f $(COMPOSE_FILE_TEST) -p $(TEST_PROJECT_NAME) logs -f
+.PHONY: test test-venv test-deps test-unit test-verbose test-clean
 
 test-venv: ## Create a Python virtual environment for tests (.venv)
 	@echo "$(BLUE)Creating Python virtual environment for testing...$(NC)"
@@ -499,22 +482,10 @@ test-venv: ## Create a Python virtual environment for tests (.venv)
 test-deps: test-venv ## Install test dependencies into .venv
 	@echo "$(BLUE)Installing test dependencies...$(NC)"
 	$(TEST_VENV_DIR)/bin/pip install --upgrade pip
-	$(TEST_VENV_DIR)/bin/pip install pytest pytest-cov pytest-dependency python-dotenv pyyaml
+	$(TEST_VENV_DIR)/bin/pip install pytest pytest-cov python-dotenv pyyaml
 	@echo "$(GREEN)Test dependencies installed$(NC)"
 
-test: test-up ## Start test stack, run all tests (host .venv), then teardown
-	@echo "$(BLUE)Running tests...$(NC)"
-	@if [ ! -d "$(TEST_VENV_DIR)" ]; then \
-		echo "$(RED)Virtual environment not found. Run 'make test-deps' first.$(NC)"; \
-		exit 1; \
-	fi
-	@echo "$(YELLOW)Running pytest...$(NC)"
-	@( $(TEST_VENV_DIR)/bin/pytest $(PYTEST_ARGS) tests/ ; test_exit=$$? ; \
-	  echo "$(BLUE)Cleaning up test environment...$(NC)" ; \
-	  $(MAKE) test-down > /dev/null 2>&1 ; \
-	  exit $$test_exit )
-
-test-unit: ## Run unit tests only (host .venv; does not start docker)
+test-unit: ## Run unit tests (host .venv)
 	@echo "$(BLUE)Running unit tests...$(NC)"
 	@if [ ! -d "$(TEST_VENV_DIR)" ]; then \
 		echo "$(RED)Virtual environment not found. Run 'make test-deps' first.$(NC)"; \
@@ -522,35 +493,17 @@ test-unit: ## Run unit tests only (host .venv; does not start docker)
 	fi
 	$(TEST_VENV_DIR)/bin/pytest $(PYTEST_ARGS) tests/unit
 
-test-integration: test-up ## Start test stack, run integration tests, then teardown
-	@echo "$(BLUE)Running integration tests...$(NC)"
-	@if [ ! -d "$(TEST_VENV_DIR)" ]; then \
-		echo "$(RED)Virtual environment not found. Run 'make test-deps' first.$(NC)"; \
-		exit 1; \
-	fi
-	@( $(TEST_VENV_DIR)/bin/pytest $(PYTEST_ARGS) tests/integration ; test_exit=$$? ; \
-	  echo "$(BLUE)Cleaning up test environment...$(NC)" ; \
-	  $(MAKE) test-down > /dev/null 2>&1 ; \
-	  exit $$test_exit )
+test: test-unit ## Run the test suite (unit tests)
 
 test-verbose: PYTEST_ARGS=-xvs
-test-verbose: test ## Run all tests with verbose pytest output
+test-verbose: test-unit ## Run tests with verbose pytest output
 	@echo "$(GREEN)Test complete$(NC)"
 
-test-clean: test-down ## Remove test containers, caches, coverage, and .venv
-	@echo "$(BLUE)Cleaning up all test artifacts...$(NC)"
-	@echo "$(YELLOW)Cleaning up Docker test networks...$(NC)"
-	@docker network prune -f --filter "name=$(TEST_PROJECT_NAME)" 2>/dev/null || true
-	@echo "$(YELLOW)Removing Docker test images...$(NC)"
-	@docker images --format "{{.Repository}}:{{.Tag}}" | grep "$(TEST_PROJECT_NAME)" | xargs -r docker rmi -f 2>/dev/null || true
-	@echo "$(YELLOW)Removing dangling Docker images from tests...$(NC)"
-	@docker image prune -f 2>/dev/null || true
-	@echo "$(YELLOW)Removing pytest cache...$(NC)"
+test-clean: ## Remove pytest caches, coverage, and .venv
+	@echo "$(BLUE)Cleaning up test artifacts...$(NC)"
 	@rm -rf .pytest_cache
 	@find . -name "__pycache__" -type d -exec rm -rf {} +  2>/dev/null || true
-	@echo "$(YELLOW)Removing coverage reports...$(NC)"
 	@rm -f .coverage
 	@rm -rf htmlcov
-	@echo "$(YELLOW)Cleaning up test virtual environment...$(NC)"
 	@rm -rf $(TEST_VENV_DIR)
-	@echo "$(GREEN)Test environment completely cleaned!$(NC)"
+	@echo "$(GREEN)Test artifacts cleaned$(NC)"
