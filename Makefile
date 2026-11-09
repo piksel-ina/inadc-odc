@@ -214,21 +214,21 @@ CollectionLsST ?= landsat-c2l2-st
 
 LIMIT ?= 9999
 
-.PHONY: index-sentinel2 index-s1-rtc index-ls9-st index-ls8-st index-ls7-st index-ls5-st \
-	index-ls9-sr index-ls8-sr index-ls7-sr index-ls5-sr index-all index-landsat index-landsat-sr index-landsat-st index-gm index-s2-gm-annual index-s2-gm-annual-lowres index-flood-hazard
+.PHONY: index-s2l2a index-s1rtc index-ls9st index-ls8st index-ls7st index-ls5st \
+	index-ls9sr index-ls8sr index-ls7sr index-ls5sr index-all index-landsat index-landsat-sr index-landsat-st index-gm index-s2gm index-s2gm-lowres index-flood
 
-index-all: index-sentinel2 index-landsat index-s1-rtc index-gm ## Index Sentinel-2 + Landsat + Sentinel-1 + S2 GeoMAD
+index-all: index-s2l2a index-landsat index-s1rtc index-gm ## Index Sentinel-2 + Landsat + Sentinel-1 + S2 GeoMAD
 	@echo "$(GREEN)All products indexed successfully!$(NC)"
 
-index-landsat-sr: index-ls9-sr index-ls8-sr index-ls7-sr index-ls5-sr ## Index Landsat surface reflectance (SR)
+index-landsat-sr: index-ls9sr index-ls8sr index-ls7sr index-ls5sr ## Index Landsat surface reflectance (SR)
 
-index-landsat-st: index-ls9-st index-ls8-st index-ls7-st index-ls5-st ## Index Landsat surface temperature (ST)
+index-landsat-st: index-ls9st index-ls8st index-ls7st index-ls5st ## Index Landsat surface temperature (ST)
 
 index-landsat: index-landsat-sr index-landsat-st ## Index all Landsat SR + ST
 
-index-gm: index-s2-gm-annual index-s2-geomad-annual-lowres ## Index Sentinel-2 Geomedian (14-band) + S2 GeoMAD Low Resolution Mosaic (RGB)
+index-gm: index-s2gm index-s2gm120 ## Index Sentinel-2 Geomedian (14-band) + S2 GeoMAD Low Resolution Mosaic (RGB)
 
-index-sentinel2: ## Index Sentinel-2 L2A via STAC (params: Bbox, Date, CollectionS2)
+index-s2l2a: ## Index Sentinel-2 L2A via STAC (params: Bbox, Date, CollectionS2)
 	@echo "$(BLUE)Indexing Sentinel-2 L2A data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='https://earth-search.aws.element84.com/v1/' \
@@ -237,7 +237,7 @@ index-sentinel2: ## Index Sentinel-2 L2A via STAC (params: Bbox, Date, Collectio
 	            --datetime='$(Date)' \
 	            --rename-product='s2_l2a'
 
-index-ls9-st: ## Index Landsat-9 Surface Temperature via STAC
+index-ls9st: ## Index Landsat-9 Surface Temperature via STAC
 	@echo "$(BLUE)Indexing LS9 C2L2 ST data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -249,7 +249,7 @@ index-ls9-st: ## Index Landsat-9 Surface Temperature via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_9\"]}}" \
 
-index-ls8-st: ## Index Landsat-8 Surface Temperature via STAC
+index-ls8st: ## Index Landsat-8 Surface Temperature via STAC
 	@echo "$(BLUE)Indexing LS8 C2L2 ST data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -261,7 +261,7 @@ index-ls8-st: ## Index Landsat-8 Surface Temperature via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_8\"]}}" \
 
-index-ls7-st: ## Index Landsat-7 Surface Temperature via STAC
+index-ls7st: ## Index Landsat-7 Surface Temperature via STAC
 	@echo "$(BLUE)Indexing LS7 C2L2 ST data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -273,7 +273,7 @@ index-ls7-st: ## Index Landsat-7 Surface Temperature via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_7\"]}}" \
 
-index-ls5-st: ## Index Landsat-5 Surface Temperature via STAC
+index-ls5st: ## Index Landsat-5 Surface Temperature via STAC
 	@echo "$(BLUE)Indexing LS5 C2L2 ST data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -285,7 +285,7 @@ index-ls5-st: ## Index Landsat-5 Surface Temperature via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_5\"]}}" \
 
-index-ls9-sr: ## Index Landsat-9 Surface Reflectance via STAC
+index-ls9sr: ## Index Landsat-9 Surface Reflectance via STAC
 	@echo "$(BLUE)Indexing LS9 C2L2 SR data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -297,7 +297,7 @@ index-ls9-sr: ## Index Landsat-9 Surface Reflectance via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_9\"]}}" \
 
-index-ls8-sr: ## Index Landsat-8 Surface Reflectance via STAC
+index-ls8sr: ## Index Landsat-8 Surface Reflectance via STAC
 	@echo "$(BLUE)Indexing LS8 C2L2 SR data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -309,7 +309,7 @@ index-ls8-sr: ## Index Landsat-8 Surface Reflectance via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_8\"]}}" \
 
-index-ls7-sr: ## Index Landsat-7 Surface Reflectance via STAC
+index-ls7sr: ## Index Landsat-7 Surface Reflectance via STAC
 	@echo "$(BLUE)Indexing LS7 C2L2 SR data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -321,7 +321,7 @@ index-ls7-sr: ## Index Landsat-7 Surface Reflectance via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_7\"]}}" \
 
-index-ls5-sr: ## Index Landsat-5 Surface Reflectance via STAC
+index-ls5sr: ## Index Landsat-5 Surface Reflectance via STAC
 	@echo "$(BLUE)Indexing LS5 C2L2 SR data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='${LANDSATLOOK}' \
@@ -333,7 +333,7 @@ index-ls5-sr: ## Index Landsat-5 Surface Reflectance via STAC
 	            --limit=$(LIMIT) \
 	            --options="query={\"platform\":{\"in\":[\"LANDSAT_5\"]}}" \
 
-index-s1-rtc: ## Index Sentinel-1 RTC via STAC
+index-s1rtc: ## Index Sentinel-1 RTC via STAC
 	@echo "$(BLUE)Indexing Sentinel-1 RTC data...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  stac-to-dc --catalog-href='https://planetarycomputer.microsoft.com/api/stac/v1/' \
@@ -343,7 +343,7 @@ index-s1-rtc: ## Index Sentinel-1 RTC via STAC
 	            --rename-product='s1_rtc' \
 	            --limit=$(LIMIT)
 
-index-s2-gm-annual: ## Index Sentinel-2 Annual Geomedian (14-band) from S3
+index-s2gm: ## Index Sentinel-2 Annual Geomedian (14-band) from S3
 	@echo "$(BLUE)Indexing Sentinel-2 Annual Geomedian (14-band)...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  bash -c "AWS_DEFAULT_REGION=ap-southeast-3 s3-to-dc --stac \
@@ -352,7 +352,7 @@ index-s2-gm-annual: ## Index Sentinel-2 Annual Geomedian (14-band) from S3
 	           's3://piksel-staging-public-data/geomad_s2/1.0.0/**/*.stac-item.json' \
 	           's2_geomad_annual'"
 
-index-s2-geomad-annual-lowres: ## Index Sentinel-2 Annual Geomedian - Low Resolution Mosaic (RGB) from S3
+index-s2gm120: ## Index Sentinel-2 Annual Geomedian - Low Resolution Mosaic (RGB) from S3
 	@echo "$(BLUE)Indexing Sentinel-2 Annual Geomedian - Low Resolution Mosaic (RGB)...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  bash -c "AWS_DEFAULT_REGION=ap-southeast-3 s3-to-dc --stac \
@@ -361,7 +361,7 @@ index-s2-geomad-annual-lowres: ## Index Sentinel-2 Annual Geomedian - Low Resolu
 	           's3://piksel-staging-public-data/s2_geomad_annual_120/1.0.0/**/*.stac-item.json' \
 	           's2_geomad_annual_120'"
 
-index-flood-hazard: ## Index Flood Hazard (Bahaya Banjir 2025) from S3
+index-flood: ## Index Flood Hazard (Bahaya Banjir 2025) from S3
 	@echo "$(BLUE)Indexing Flood Hazard (Bahaya Banjir 2025)...$(NC)"
 	$(DOCKER_COMPOSE) exec odc \
 	  bash -c "AWS_DEFAULT_REGION=ap-southeast-3 s3-to-dc --stac \
