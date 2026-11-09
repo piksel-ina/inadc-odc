@@ -1,8 +1,8 @@
 product,definition
-ls5_c2l2_sr;ls7_c2l2_sr;ls8_c2l2_sr;ls9_c2l2_sr,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/lsX_c2l2_sr.odc-product.yaml
-ls5_c2l2_st;ls7_c2l2_st;ls8_c2l2_st;ls9_c2l2_st,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/lsX_c2l2_st.odc-product.yaml
-s2_l2a,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2_l2a.odc-product.yaml
-s1_rtc,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s1_rtc.odc-product.yaml
-s2_geomad_annual,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2_geomad_annual.odc-product.yaml
-s2_geomad_annual_120,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/s2_geomad_annual_120.odc-product.yaml
-flood_hazard,https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/flood_hazard.odc-product.yaml
+ls5_c2l2_sr;ls7_c2l2_sr;ls8_c2l2_sr;ls9_c2l2_sr,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/lsX_c2l2_sr.odc-product.yaml
+ls5_c2l2_st;ls7_c2l2_st;ls8_c2l2_st;ls9_c2l2_st,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/lsX_c2l2_st.odc-product.yaml
+s2_l2a,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/s2_l2a.odc-product.yaml
+s1_rtc,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/s1_rtc.odc-product.yaml
+s2_geomad_annual,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/s2_geomad_annual.odc-product.yaml
+s2_geomad_annual_120,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/s2_geomad_annual_120.odc-product.yaml
+flood_hazard,https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/flood_hazard.odc-product.yaml

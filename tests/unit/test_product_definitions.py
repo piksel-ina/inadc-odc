@@ -125,5 +125,5 @@ def test_products_csv_has_single_flood_hazard_product():
     flood_rows = [row for row in rows if row[0].startswith('flood_hazard')]
     assert flood_rows == [[
         'flood_hazard',
-        'https://raw.githubusercontent.com/piksel-ina/piksel-core/main/products/flood_hazard.odc-product.yaml',
+        'https://raw.githubusercontent.com/piksel-ina/inadc-odc/main/products/flood_hazard.odc-product.yaml',
     ]]
