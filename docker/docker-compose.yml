@@ -43,45 +43,6 @@ services:
       retries: 3
       start_period: 30s
 
-  explorer:
-    profiles: [explorer]
-    image: opendatacube/explorer:3.0.1
-    build:
-      args:
-        ENVIRONMENT: deployment
-    platform: linux/x86_64
-    environment:
-      # Database connection for PostGIS
-      - ODC_DEFAULT_DB_USERNAME=${POSTGRES_USER}
-      - ODC_DEFAULT_DB_DATABASE=${POSTGRES_DB}
-      - ODC_DEFAULT_DB_HOSTNAME=${POSTGRES_HOST:-postgres}
-      - ODC_DEFAULT_DB_PASSWORD=${POSTGRES_PASSWORD}
-      - ODC_DEFAULT_DB_PORT=${POSTGRES_PORT:-5432}
-      - ODC_DEFAULT_INDEX_DRIVER=postgis
-      - ODC_POSTGIS_INDEX_DRIVER=postgis
-      - ODC_DEFAULT_DB_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
-      - ODC_POSTGIS_DB_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
-
-      # Explorer specific settings
-      - FLASK_APP=cubedash
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      - SHELL=/bin/bash
-    ports:
-      - "${EXPLORER_PORT:-80}:8080"
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      odc:
-        condition: service_healthy
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 networks:
   default:
     name: ${PROJECT_NAME:-piksel}-net
