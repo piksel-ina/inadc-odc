@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=docker/odc/uv.lock,target=uv.lock \
-    --mount=type=bind,source=docker/odc/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --no-dev
 
 # --- Runtime stage ---
@@ -51,7 +51,7 @@ RUN useradd -m -s /bin/bash odc
 
 COPY --chown=odc:odc datacube.conf.template /home/odc/.datacube.conf.template
 
-COPY --chmod=0755 docker/odc/entrypoint.sh /entrypoint.sh
+COPY --chmod=0755 entrypoint.sh /entrypoint.sh
 
 USER odc
 WORKDIR /home/odc/app

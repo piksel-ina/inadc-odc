@@ -72,7 +72,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./docker/odc/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate-tag.outputs.image_tag }}
           labels: ${{ steps.meta.outputs.labels }}

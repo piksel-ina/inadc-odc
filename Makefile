@@ -4,7 +4,7 @@
 # =========================
 # Settings
 # =========================
-COMPOSE_FILE := docker/docker-compose.yml
+COMPOSE_FILE := docker-compose.yml
 PROJECT_NAME := piksel
 ENVIRONMENT ?= default
 EPSG ?= 4326
@@ -440,30 +440,18 @@ jupyter-token: ## Print Jupyter token URL (if token auth enabled)
 # =========================
 # Dependency management (uv)
 # =========================
-.PHONY: compile-deps compile-odc-deps compile-jupyter-deps update-deps
-compile-deps: compile-odc-deps compile-jupyter-deps ## Compile ODC + Jupyter dependency lockfiles
-	@echo "$(GREEN)All dependencies compiled successfully!$(NC)"
-
-compile-odc-deps: ## Compile ODC dependencies (docker/odc/pyproject.toml -> uv.lock)
+.PHONY: compile-deps update-deps
+compile-deps: ## Compile ODC dependency lockfile (pyproject.toml -> uv.lock)
 	@echo "$(BLUE)Compiling ODC dependencies using uv...$(NC)"
 	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-	@cd docker/odc && uv lock --python 3.12
+	@uv lock --python 3.12
 	@echo "$(GREEN)ODC dependencies compiled!$(NC)"
 
-compile-jupyter-deps: ## Compile Jupyter dependencies (docker/jupyter/requirements.in -> requirements.txt)
-	@echo "$(BLUE)Compiling Jupyter dependencies using uv...$(NC)"
+update-deps: ## Update ODC dependencies to latest versions (uv --upgrade)
+	@echo "$(BLUE)Updating ODC dependencies to their latest versions using uv...$(NC)"
 	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-	@uv pip compile docker/jupyter/requirements.in -o docker/jupyter/requirements.txt
-	@echo "$(GREEN)Jupyter dependencies compiled!$(NC)"
-
-update-deps: ## Update ODC + Jupyter dependencies to latest versions (uv --upgrade)
-	@echo "$(BLUE)Updating all dependencies to their latest versions using uv...$(NC)"
-	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-	@echo "$(YELLOW)Updating ODC dependencies...$(NC)"
-	@cd docker/odc && uv lock --python 3.12 --upgrade
-	@echo "$(YELLOW)Updating Jupyter dependencies...$(NC)"
-	@uv pip compile docker/jupyter/requirements.in -o docker/jupyter/requirements.txt --upgrade
-	@echo "$(GREEN)All dependencies updated successfully!$(NC)"
+	@uv lock --python 3.12 --upgrade
+	@echo "$(GREEN)Dependencies updated successfully!$(NC)"
 
 # =========================
 # Testing

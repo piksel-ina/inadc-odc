@@ -19,8 +19,8 @@ services:
 
   odc:
     build:
-      context: ../
-      dockerfile: docker/odc/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     platform: linux/x86_64
     environment:
       - ODC_DEFAULT_DB_USERNAME=${POSTGRES_USER}
@@ -29,8 +29,8 @@ services:
       - ODC_DEFAULT_DB_PASSWORD=${POSTGRES_PASSWORD}
       - ODC_DEFAULT_DB_PORT=${POSTGRES_PORT:-5432}
     volumes:
-      - ../products:/home/venv/products
-      - ../metadata:/home/venv/metadata
+      - ./products:/home/venv/products
+      - ./metadata:/home/venv/metadata
     depends_on:
       postgres:
         condition: service_healthy
