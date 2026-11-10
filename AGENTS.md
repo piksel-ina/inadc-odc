@@ -65,4 +65,4 @@ make update-deps   # recompiles with --upgrade
 ## CI (GitHub Actions)
 
 - **Tests** (`.github/workflows/test-odc.yml`): on push to `main`/`develop`/`feature/*` and PRs to `main`/`develop`; runs `make setup`, `make test-deps`, `make test-unit`.
-- **Image build** (`.github/workflows/build-inadc-odc.yml`): pushing a tag `inadc-odc-vYYYYMMDD-HHMM` builds and pushes the ODC image to the `inadc-odc` ECR repo.
+- **Image build** (`.github/workflows/build-inadc-odc.yml`): pushing a tag `inadc-odc-vYYYYMMDD-HHMM` builds and pushes the ODC image to the `inadc-odc` ECR repo. Release with `gh release create "inadc-odc-v$(TZ=Asia/Jakarta date +%Y%m%d-%H%M)" --target main --generate-notes`; this creates the tag and the release together. If the build fails, delete the release and tag before retrying.

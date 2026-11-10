@@ -99,3 +99,11 @@ Product definitions live in `products/*.yaml` and are catalogued in `products.cs
 ## Docker Build (GitHub Actions)
 
 Pushing a Git tag matching `inadc-odc-vYYYYMMDD-HHMM` builds the ODC image and pushes it to the `inadc-odc` AWS ECR repository (see `.github/workflows/build-inadc-odc.yml`).
+
+To cut a release, create the tag and the GitHub release in one step. Use the current Jakarta time:
+
+```bash
+gh release create "inadc-odc-v$(TZ=Asia/Jakarta date +%Y%m%d-%H%M)" --target main --generate-notes
+```
+
+The tag push starts the build, and the release notes list the pull requests merged since the previous release.
