@@ -1,4 +1,4 @@
-# Piksel Platform Makefile
+# inadc-odc Makefile
 # A set of commands to manage ODC development and deployment
 
 # =========================
@@ -68,33 +68,33 @@ check-config: ## Check datacube configuration (runs inside ODC container)
 # =========================
 .PHONY: up stop down rmvol restart ps logs clean
 up: ## Start services (PostGIS + ODC)
-	@echo "$(BLUE)Starting Piksel services...$(NC)"
+	@echo "$(BLUE)Starting inadc-odc services...$(NC)"
 	@export $$(grep -v '^#' .env | xargs) && \
 	$(DOCKER_COMPOSE) up -d && \
 	echo "$(BLUE)ODC and PostgreSQL services started$(NC)"
 
 stop: ## Stop project containers (without removing)
-	@echo "$(BLUE)Stopping Piksel services...$(NC)"
+	@echo "$(BLUE)Stopping inadc-odc services...$(NC)"
 	$(DOCKER_COMPOSE) stop
 
 down: ## Stop and remove containers (preserve volumes)
-	@echo "$(BLUE)Stopping and removing Piksel containers (preserving volumes)...$(NC)"
+	@echo "$(BLUE)Stopping and removing inadc-odc containers (preserving volumes)...$(NC)"
 	$(DOCKER_COMPOSE) down
 
 rmvol: ## Stop and remove containers + volumes (destructive)
-	@echo "$(BLUE)Stopping and removing Piksel containers and volumes...$(NC)"
+	@echo "$(BLUE)Stopping and removing inadc-odc containers and volumes...$(NC)"
 	$(DOCKER_COMPOSE) down -v
 
 restart: ## Restart all services
-	@echo "$(BLUE)Restarting Piksel services...$(NC)"
+	@echo "$(BLUE)Restarting inadc-odc services...$(NC)"
 	$(DOCKER_COMPOSE) restart
 
 ps: ## Show service status
-	@echo "$(BLUE)Piksel service status:$(NC)"
+	@echo "$(BLUE)inadc-odc service status:$(NC)"
 	$(DOCKER_COMPOSE) ps
 
 logs: ## Tail logs from all services
-	@echo "$(BLUE)Viewing Piksel logs (press Ctrl+C to exit)...$(NC)"
+	@echo "$(BLUE)Viewing inadc-odc logs (press Ctrl+C to exit)...$(NC)"
 	$(DOCKER_COMPOSE) logs -f
 
 clean: ## Prune unused Docker resources (prompts; affects whole Docker host)

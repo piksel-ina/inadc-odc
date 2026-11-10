@@ -1,6 +1,6 @@
-# Mini-Piksel Testing Framework
+# inadc-odc Testing Framework
 
-This document describes the testing approach for the Mini-Piksel project, including test types and execution instructions.
+This document describes the testing approach for the inadc-odc project, including test types and execution instructions.
 
 ## Test Types
 
